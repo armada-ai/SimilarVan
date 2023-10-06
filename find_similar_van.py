@@ -46,11 +46,17 @@ def yolov5_detect(model, img, size=640):
 def crop_img(img, dets):
     crops = []
     for i, det in enumerate(dets):
-        x1, y1, x2, y2, conf, cls_id = det  # 两个点
+        x1, y1, x2, y2, conf, cls_id = det
+        if cls_id > 0 and cls_id not in [1, 2, 3, 5, 7]:
+            continue
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
         img_crop = img[y1: y2, x1: x2]
         crops.append(img_crop)
     return crops
+
+
+def cache_embeddings():
+    pass
 
 
 def main():
@@ -80,22 +86,23 @@ def main():
     
 
     
-def embedding_extract():
-    from transformers import ViTImageProcessor, ViTModel
-    from PIL import Image
-    import requests
-
-    url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-    image = Image.open(requests.get(url, stream=True).raw)
-
+def embedding_extract(model, processor, imgs):
+    """
+    @param: model: 
+    @param: processor: 
+    @param: imgs: list, each is a numpy img with shape, h * w * 3
+    
+    returns:
+        shape: len(imgs) * 768
+    """
+    if not isinstance(imgs, list):
+        imgs = [imgs]
     processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
     model = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
-    inputs = processor(images=image, return_tensors="pt")
+    inputs = processor(images=imgs, return_tensors="pt")
 
     outputs = model(**inputs)
-    print("last_hidden_state: ", outputs["last_hidden_state"].shape)
-    print("pooler_output: ", outputs["pooler_output"].shape)
-    
+    return outputs["pooler_output"]
     
     
 
