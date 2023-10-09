@@ -22,7 +22,7 @@ mv yolov5m.torchscript ckpts/coco_yolov5m.torchscript
 ```
 
 ## find similar van
-`python find_similary_van.py`
+`python find_similar_van.py`
 
 # TODO
 
