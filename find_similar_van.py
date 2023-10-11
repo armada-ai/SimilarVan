@@ -215,7 +215,7 @@ def main(dataset_root, embeddings_save_root, infer_img_path):
     
     dets, CLASSES = infer(infer_img_path, embeddings)
     
-    img_save_path = "results/%s" % os.path.basename(infer_img_path)
+    img_save_path = "results/v0/%s" % os.path.basename(infer_img_path)
     plot_img(infer_img_path, dets, CLASSES, img_save_path)
         
 
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         a. read an image
         b. detect cars by coco model
         c. crop detected cars and extract these cars' embedding respectively
-        d. traverse these cars' embedding, for each image's embedding, do:
+        d. traverse these detected cars' embedding, for each image's embedding, do:
         e. find the closest embedding's catrgoy
         f. output & save result
     """
@@ -243,21 +243,21 @@ if __name__ == "__main__":
     device = "cuda"
     amazon_ckpt_path = "ckpts/amazon_van_detect.torchscript"
     amazon_model = load_model(amazon_ckpt_path, device)
-    coco_ckpt_path = "ckpts/coco_yolov5m.torchscript"
+    coco_ckpt_path = "ckpts/coco_yolov5x.torchscript"
     coco_model = load_model(coco_ckpt_path, device)
     vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
     vit_model = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
     
     
-    dataset_root = "/home/ubuntu/codes/SimilarVan/Delivery_Van/train"
-    embeddings_save_root = "embeddings"
-    # infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/train/20230710170713.MP4_000011.jpg"
-    # infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/train/20230710170432.MP4_000139.jpg"
-    # infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/val/20230710165403.MP4_000092.jpg"
-    infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/val/20230710170432.MP4_000099.jpg"
-    infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/val/20230710170713.MP4_000027.jpg"
-    infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/val/20230710170713.MP4_000095.jpg"
-    infer_img_path = "/home/ubuntu/codes/SimilarVan/Delivery_Van/val/20230710164737.MP4_000134.jpg"
+    dataset_root = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/train"
+    embeddings_save_root = "embeddings/v0"
+    # infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/train/20230710170713.MP4_000011.jpg"
+    # infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/train/20230710170432.MP4_000139.jpg"
+    # infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val/20230710165403.MP4_000092.jpg"
+    infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val/20230710170432.MP4_000099.jpg"
+    infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val/20230710170713.MP4_000027.jpg"
+    infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val/20230710170713.MP4_000095.jpg"
+    infer_img_path = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val/20230710164737.MP4_000134.jpg"
     
     main(dataset_root, embeddings_save_root, infer_img_path)
     
