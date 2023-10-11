@@ -85,6 +85,13 @@ pipeline:
     a. read an video
     b. detect cars by coco model
     c. crop detected cars and extract these cars' embedding
-    d. get the most similar det, and the similarity of the det should > thresh
+    d. get the most similar det, and the  cosine similarity of the det should > thresh
     e. output & save result
+```
+
+## find similar van v03
+```
+python find_similar_van_v03.py
+
+same pipeline as "find similar van v02", but add a video result
 ```

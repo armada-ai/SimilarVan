@@ -166,8 +166,16 @@ def infer(vid_path, embeddings, interval=1):
     :returns
         predicts category
     """
-    save_root = "results/v2"
+    save_root = "results/v3"
     reader = cv2.VideoCapture(vid_path)
+     
+    width = int(reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(round(reader.get(cv2.CAP_PROP_FPS) / interval))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    os.makedirs(os.path.dirname(save_root), exist_ok=True)
+    save_vid_name = "%s/%s.mp4" % (save_root, os.path.basename(vid_path).split(".")[0])
+    writer = cv2.VideoWriter(save_vid_name, fourcc, fps, (width, height),True)
         
     vid_name = os.path.basename(vid_path)#.split(".")[0]
     count = 0
@@ -189,14 +197,18 @@ def infer(vid_path, embeddings, interval=1):
                 embeddings_ = embeddings__ / embeddings__.norm(dim=-1, keepdim=True)
                 img_embeddings_ = img_embeddings / img_embeddings.norm(dim=-1, keepdim=True)
                 similarity = (embeddings_ * img_embeddings_).sum(dim=-1)
+                # cosine similarity
                 max_idx = torch.argmax(similarity)
                 max_similarity = similarity[max_idx]
                 if max_similarity >= thresh:
                     det = dets[max_idx]
                     det[-1] = 0
                     save_path = "%s/%s/%06d.jpg" % (save_root, vid_name, count)
-                    plot_img(frame, [det], ["0"], save_path)
+                    result_frame = plot_img(frame, [det], ["0"], save_path)
+                    writer.write(result_frame)
         count += 1
+    reader.release()
+    writer.release()
     
 
 def plot_img(img, dets, CLASSES, save_path):
@@ -219,6 +231,7 @@ def plot_img(img, dets, CLASSES, save_path):
             print("car coord: %s; cls: %s" % (det, CLASSES[int(det[-1])]))
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     cv2.imwrite(save_path, img)
+    return img
 
     
 def main(dataset_root, embeddings_save_root, infer_vid_path, interval=10):
@@ -248,7 +261,7 @@ if __name__ == "__main__":
         a. read an video
         b. detect cars by coco model
         c. crop detected cars and extract these cars' embedding
-        d. get the most similar det, and the cosine similarity of the det should > thresh
+        d. get the most similar det, and the  cosine similarity of the det should > thresh
         e. output & save result
     """
     device = "cuda"
@@ -258,8 +271,8 @@ if __name__ == "__main__":
     vit_model = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
     
     
-    dataset_root = "/home/ubuntu/codes/SimilarVan/data/Delivery_Van/val"
-    embeddings_save_root = "embeddings/v2"
+    dataset_root = "/home/ubuntu/codes/SimilarVan/data/AmazonVan"
+    embeddings_save_root = "embeddings/v3"
     infer_vid_path = "/home/ubuntu/codes/SimilarVan/data/videos_db/20230710170713.MP4"
     
     interval=30

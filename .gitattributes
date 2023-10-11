@@ -1,3 +1,6 @@
 ckpts/amazon_van_detect.torchscript filter=lfs diff=lfs merge=lfs -text
 ckpts/coco_yolov5x.torchscript filter=lfs diff=lfs merge=lfs -text
 data filter=lfs diff=lfs merge=lfs -text
+data/Delivery_Van filter=lfs diff=lfs merge=lfs -text
+data/videos_db filter=lfs diff=lfs merge=lfs -text
+data/AmazonVan filter=lfs diff=lfs merge=lfs -text
