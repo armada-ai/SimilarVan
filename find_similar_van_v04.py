@@ -159,14 +159,42 @@ def cache_dataset_embeddings(img_root, save_root):
     return img_embeddings_
 
 
-def infer(vid_path, embeddings, interval=1):
+def gen_img_grid(img, n=4):
+    h, w, _ = img.shape
+    h_interval = h // n
+    w_interval = w // n
+    crop_imgs, bboxes = [], []
+    for j in range(n):  # h
+        start_y = j * h_interval
+        for i in range(n):  # w
+            start_x = i * w_interval
+            end_x = (i + 1) * w_interval
+            end_y = (j + 1) * h_interval
+            if i == n - 1:
+                end_x = max(end_x, w)
+            if j == n - 1:
+                end_y = max(end_y, h)
+            crop_img = img[start_y: end_y + 1, start_x: end_x + 1, :]
+            bbox = [start_x, start_y, end_x, end_y, -1, 0]
+            crop_imgs.append(crop_img)
+            bboxes.append(bbox)
+            if i < n - 1 and j < n - 1:
+                bbox = [end_x - w_interval // 2, end_y - h_interval // 2, 
+                end_x + w_interval // 2, end_y + h_interval // 2, -1, -1]
+                crop_img = img[bbox[1]: bbox[3] + 1, bbox[0]: bbox[2] + 1, :]
+                crop_imgs.append(crop_img)
+                bboxes.append(bbox)
+    return crop_imgs, bboxes
+
+
+def infer(vid_path, embeddings, interval=1, n=4):
     """
     :param: infer_img_path: the image's absolute path
-    :param: embeddings: dict, {"other": other cars' embedding, "amazon": amazon car's embedding}
+    :param: embeddings: 
     :returns
         predicts category
     """
-    save_root = "results/v3"
+    save_root = "results/v4"
     reader = cv2.VideoCapture(vid_path)
      
     width = int(reader.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -179,17 +207,20 @@ def infer(vid_path, embeddings, interval=1):
         
     vid_name = os.path.basename(vid_path)#.split(".")[0]
     count = 0
-    thresh = 0.7
+    thresh = 0.75
     while True:
         ret, frame = reader.read()
         if not ret:
             break
         if count % interval == 0:
-            dets = yolov5_detect(coco_model, frame, size=640)
-            # print("coco_model: ", dets)
-            if len(dets) == 0:
-                continue
-            crop_imgs = crop_img(frame, dets)
+            crop_imgs, dets = gen_img_grid(frame, n)
+            # dets = yolov5_detect(coco_model, frame, size=640)
+            # # print("coco_model: ", dets)
+            # if len(dets) == 0:
+            #     print("frame %s no dets, use img grid" % count)
+            #     crop_imgs, dets = gen_img_grid(frame, n)
+            # else:
+            #     crop_imgs = crop_img(frame, dets)
             img_embeddings = embedding_extract(crop_imgs)
 
             if img_embeddings is not None:
@@ -200,7 +231,7 @@ def infer(vid_path, embeddings, interval=1):
                 # cosine similarity
                 max_idx = torch.argmax(similarity)
                 max_similarity = similarity[max_idx]
-                print("max_similarity: ", max_similarity.data)
+                print("frame %s max_similarity: %s" % (count, max_similarity.data))
                 if max_similarity >= thresh:
                     det = dets[max_idx]
                     det[-1] = 0
@@ -210,6 +241,7 @@ def infer(vid_path, embeddings, interval=1):
         count += 1
     reader.release()
     writer.release()
+    print("saved video path: %s" % save_vid_name)
     
 
 def plot_img(img, dets, CLASSES, save_path):
@@ -235,7 +267,7 @@ def plot_img(img, dets, CLASSES, save_path):
     return img
 
     
-def main(dataset_root, embeddings_save_root, infer_vid_path, interval=10):
+def main(dataset_root, embeddings_save_root, infer_vid_path, interval=10, n=4):
     dataset_embedding_path = "%s/dataset_embeddings.emb" % embeddings_save_root
     
     if os.path.exists(dataset_embedding_path):
@@ -245,7 +277,7 @@ def main(dataset_root, embeddings_save_root, infer_vid_path, interval=10):
         print("calculating embeddings, please waiting......")
         embeddings = cache_dataset_embeddings(dataset_root, embeddings_save_root)
     
-    infer(infer_vid_path, embeddings, interval)
+    infer(infer_vid_path, embeddings, interval, n)
     
 
 if __name__ == "__main__":
@@ -273,9 +305,10 @@ if __name__ == "__main__":
     
     
     dataset_root = "/home/ubuntu/codes/SimilarVan/data/AmazonVan"
-    embeddings_save_root = "embeddings/v3"
+    embeddings_save_root = "embeddings/v4"
     infer_vid_path = "/home/ubuntu/codes/SimilarVan/data/videos_db/20230710170432.MP4"
     
     interval=30
-    main(dataset_root, embeddings_save_root, infer_vid_path, interval)
+    n = 4
+    main(dataset_root, embeddings_save_root, infer_vid_path, interval, n)
     
