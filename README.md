@@ -95,3 +95,10 @@ python find_similar_van_v03.py
 
 same pipeline as "find similar van v02", but add a video result
 ```
+
+## find similar van v04
+```
+python find_similar_van_v04.py
+
+same pipeline as "find similar van v03", but replace coco model with a gen_img_grid function
+```

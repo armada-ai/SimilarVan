@@ -273,7 +273,7 @@ if __name__ == "__main__":
     
     dataset_root = "/home/ubuntu/codes/SimilarVan/data/AmazonVan"
     embeddings_save_root = "embeddings/v3"
-    infer_vid_path = "/home/ubuntu/codes/SimilarVan/data/videos_db/20230710170713.MP4"
+    infer_vid_path = "/home/ubuntu/codes/SimilarVan/data/videos_db/20230710170432.MP4"
     
     interval=30
     main(dataset_root, embeddings_save_root, infer_vid_path, interval)
