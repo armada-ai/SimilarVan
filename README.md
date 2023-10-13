@@ -5,13 +5,21 @@
 
 # Installation
 
-`conda create -n similar python=3.8`
+```
+conda create -n similar python=3.8
+conda activate similar
+pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
+pip install -r requirements.txt
+```
+To run open world object detection, run following commands to finish installation
 
-`conda activate similar`
+```
+cd mvits_for_class_agnostic_od
+pip install -r requirements.txt
+cd models/ops
+sh make.sh
+```
 
-`pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113`
-
-`pip install -r requirements.txt`
 
 # Scripts
 ## parse official coco's torch pt to torchscipt(if `ckpts/coco_yolov5x.torchscript` does not exist, run following commands)
