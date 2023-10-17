@@ -110,3 +110,10 @@ python find_similar_van_v04.py
 
 same pipeline as "find similar van v03", but replace coco model with a gen_img_grid function
 ```
+
+## find similar van v05
+```
+python find_similar_van_v05.py
+
+same pipeline as "find similar van v03", but during the inference stage, we replace coco model with opencv world detection model(mvits_for_class_agnostic_od)
+```

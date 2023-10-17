@@ -13,4 +13,5 @@ seaborn==0.12.0
 transformers
 scikit-learn
 
-
+setuptools
+transformers==4.33.3

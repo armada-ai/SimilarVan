@@ -5,3 +5,7 @@ data/Delivery_Van filter=lfs diff=lfs merge=lfs -text
 data/videos_db filter=lfs diff=lfs merge=lfs -text
 data/AmazonVan filter=lfs diff=lfs merge=lfs -text
 SiamRPN++/experiments/siamrpn_r50_l234_dwxcorr/model.pth filter=lfs diff=lfs merge=lfs -text
+ckpts/MDef_DETR_minus_language_r101_epoch10.pth filter=lfs diff=lfs merge=lfs -text
+ckpts/MDef_DETR_r101_epoch10.pth filter=lfs diff=lfs merge=lfs -text
+ckpts/MDef_DETR_r101_epoch20.pth filter=lfs diff=lfs merge=lfs -text
+ckpts/MDef_DETR_r101_epoch20_ore.pth filter=lfs diff=lfs merge=lfs -text

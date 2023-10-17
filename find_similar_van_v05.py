@@ -6,15 +6,18 @@ import os
 from glob import glob
 from tqdm import tqdm
 from PIL import Image
-from sklearn.cluster import  KMeans
 from utils.augmentations import letterbox
 from utils.general import non_max_suppression, scale_coords
 from transformers import ViTImageProcessor, ViTModel
+import sys
+sys.path.append("./inference")
+from models.model import Model
+
 
 Image.MAX_IMAGE_PIXELS = 1000000000000000
 
 
-def load_model(ckpt_path, device="cuda"):
+def load_coco_model(ckpt_path, device="cuda"):
     model = torch.jit.load(ckpt_path).to(device)
     model.eval()
     return model
@@ -47,15 +50,16 @@ def yolov5_detect(model, img, size=640):
         return new_det.detach().cpu().numpy()
     else:
         return []
-
-
+    
+    
 def crop_img(img, dets):
     crops = []
+    h, w, _ = img.shape
     for i, det in enumerate(dets):
         x1, y1, x2, y2, conf, cls_id = det
         # if cls_id > 0 and int(cls_id) not in [1, 2, 3, 5, 7]:
         #     continue
-        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        x1, y1, x2, y2 = max(int(x1), 0), max(int(y1), 0), min(int(x2), w), min(int(y2), h)
         img_crop = img[y1: y2, x1: x2]
         crops.append(img_crop)
     return crops
@@ -159,6 +163,35 @@ def cache_dataset_embeddings(img_root, save_root):
     return img_embeddings_
 
 
+def load_od_model(model_name="mdef_detr_minus_language", ckpt_path="ckpts/MDef_DETR_minus_language_r101_epoch10.pth"):
+    model = Model(model_name, ckpt_path).get_model()
+    return model
+
+
+def od_detect(model, image_path, caption="all objects", multi_crop=False, thresh=0.15):
+    # Note: Caption is only rquired for MViTs
+    if multi_crop:
+        dets = model.infer_image_multi_crop(image_path, caption=caption)
+    else:
+        dets = model.infer_image(image_path, caption=caption)
+    
+    bboxes = np.array(dets[0], dtype=np.int32)
+    confs = np.array(dets[1], dtype=np.float32)
+    idx = np.where(confs >= thresh)
+    new_dets = np.zeros((len(idx[0]), 6), dtype=np.float32)
+    new_dets[:, :4] = bboxes[idx]
+    new_dets[:, -2] = confs[idx]
+    new_dets[:, -1] = -1
+    h, w, _ = cv2.imread(image_path).shape
+    new_dets[np.where(new_dets[:, 0] < 0), 0] = 0
+    new_dets[np.where(new_dets[:, 1] < 0), 1] = 0
+    new_dets[np.where(new_dets[:, 2] > w), 2] = w
+    new_dets[np.where(new_dets[:, 3] > h), 3] = h
+    # import pdb
+    # pdb.set_trace()
+    return new_dets
+
+
 def infer(vid_path, embeddings, interval=1):
     """
     :param: infer_img_path: the image's absolute path
@@ -166,7 +199,7 @@ def infer(vid_path, embeddings, interval=1):
     :returns
         predicts category
     """
-    save_root = "results/v3"
+    save_root = "results/v5"
     reader = cv2.VideoCapture(vid_path)
      
     width = int(reader.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -175,6 +208,7 @@ def infer(vid_path, embeddings, interval=1):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     os.makedirs(os.path.dirname(save_root), exist_ok=True)
     save_vid_name = "%s/%s.mp4" % (save_root, os.path.basename(vid_path).split(".")[0])
+    print("save_vid_name: ", save_vid_name)
     writer = cv2.VideoWriter(save_vid_name, fourcc, fps, (width, height),True)
         
     vid_name = os.path.basename(vid_path)#.split(".")[0]
@@ -185,8 +219,10 @@ def infer(vid_path, embeddings, interval=1):
         if not ret:
             break
         if count % interval == 0:
-            dets = yolov5_detect(coco_model, frame, size=640)
-            # print("coco_model: ", dets)
+            image_path = "tmp.png"
+            cv2.imwrite(image_path, frame)
+            dets = od_detect(od_model, image_path, caption="all objects", multi_crop=False, thresh=0.15)
+            # print("od_model: ", dets)
             if len(dets) == 0:
                 continue
             crop_imgs = crop_img(frame, dets)
@@ -267,14 +303,18 @@ if __name__ == "__main__":
     """
     device = "cuda"
     coco_ckpt_path = "ckpts/coco_yolov5x.torchscript"
-    coco_model = load_model(coco_ckpt_path, device)
+    coco_model = load_coco_model(coco_ckpt_path, device)
     vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
     vit_model = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
     
     
     dataset_root = "/home/ubuntu/codes/SimilarVan/data/AmazonVan"
-    embeddings_save_root = "embeddings/v3"
+    embeddings_save_root = "embeddings/v5"
     infer_vid_path = "/home/ubuntu/codes/SimilarVan/data/videos_db/20230710170713.MP4"
+    
+    model_name="mdef_detr_minus_language"
+    od_ckpt_path="ckpts/MDef_DETR_minus_language_r101_epoch10.pth"
+    od_model = load_od_model(model_name, od_ckpt_path)
     
     interval=30
     main(dataset_root, embeddings_save_root, infer_vid_path, interval)
