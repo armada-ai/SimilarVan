@@ -11,10 +11,10 @@ conda activate similar
 pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
 pip install -r requirements.txt
 ```
+
 To run open world object detection, run following commands to finish installation
 
 ```
-cd mvits_for_class_agnostic_od
 pip install -r requirements.txt
 cd models/ops
 sh make.sh
@@ -22,7 +22,9 @@ sh make.sh
 
 
 # Scripts
+
 ## parse official coco's torch pt to torchscipt(if `ckpts/coco_yolov5x.torchscript` does not exist, run following commands)
+
 ```
 cd ckpts
 wget https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x.pt
@@ -31,89 +33,84 @@ python export.py --weights ckpts/yolov5x.pt --include torchscript
 rm -rf ckpts/yolov5x.pt
 ```
 
-## find similar van
-```
-python find_similar_van.py
+## find similar objs pipeline
 
-pipeline:
-1. cache dataset embeddings
-    a. traverse all images in the dataset, for each image, do:
-    b. detect amazon van by amazon_van model
-    c. detect cars by coco model
-    d. if the cars are detected by both amazon_van model and coco model, remove the cars in coco model's detections
-    e. crop the cars of amazon_van model and coco model respectively
-    f. extract the embeddings of amazon_van model and coco model respectively
-    g. add all the embeddings of amazon_van/coco model to get avg_embedding of amazon_van/coco model
-    h. save all the embeddings
-2. inference
-    a. read an image
-    b. detect cars by coco model
-    c. crop detected cars and extract these cars' embedding respectively
-    d. traverse these detected cars' embedding, for each image's embedding, do:
-    e. find the closest embedding's catrgoy
-    f. output & save result
+### step 1. cache dataset embeddings
+
+```
+python make_dataset_embeddings.py
 ```
 
+#### How to use
 
-## find similar van v01
+1. gen cropped imgs
+2. clean up cropped imgs
+3. extract embeddings
+
+#### model selection
+
+`det_model_name` ------select detection model, support `["yolov5_coco", "yolov5_amazon", "mdef", "grid"]`
+
+`encoding_model_name`------select encoding model, support `["cvnet", "vit"]`
+
+`img_root`------the root directory of the dataset you want to extract
+
+`mode`------which way to summarize embeddings, only support `["mean", "seperate"]`
+
+`cleaned_img_root`------the root directory of the cleaned cropped images
+
+### step 2. inference
+
+`python find_similar_objs.py`
+
+#### model selection
+
+`det_model_name` ------select detection model, only support `["yolov5_coco", "yolov5_amazon", "mdef", "grid"]`
+
+`encoding_model_name`------select encoding model, only support `["cvnet", "vit"]`
+
+`dataset_name`------the name of the dataset
+`infer_vid_path`------the video's path
+
+`mode`------the ways to summarize embeddings, only support `["mean", "seperate"]`
+
+`configs.json`------store all models' config
+
+
+
 ```
-python find_similar_van_v01.py
-
-pipeline:
-1. cache dataset embeddings
-    a. traverse all videos in the dataset, for each video, read it to frame, for each frame, do:
-    b. detect cars by coco model
-    c. crop the cars
-    d. extract the embeddings of these cars
-    e. save all the embeddings
-    f. use k-means to obtain k different avg_embeddings
-2. inference
-    a. read an image
-    b. detect cars by coco model
-    c. crop detected cars and extract these cars' embedding respectively
-    d. traverse these detected cars' embedding, do:
-    e. use k-means model to predict each detected cars' category
-    f. output & save result
-```
-
-
-## find similar van v02
-```
-python find_similar_van_v02.py
-
-pipeline:
-1. cache dataset embeddings
-    a. traverse all images in the dataset, for each image, do:
-    b. detect cars by coco model
-    c. crop the cars
-    d. extract the embeddings of these cars
-    e. add all the embeddings to get avg_embedding
-    f. save all the embeddings
-2. inference
-    a. read an video
-    b. detect cars by coco model
-    c. crop detected cars and extract these cars' embedding
-    d. get the most similar det, and the  cosine similarity of the det should > thresh
-    e. output & save result
-```
-
-## find similar van v03
-```
-python find_similar_van_v03.py
-
-same pipeline as "find similar van v02", but add a video result
-```
-
-## find similar van v04
-```
-python find_similar_van_v04.py
-
-same pipeline as "find similar van v03", but replace coco model with a gen_img_grid function
+configs.json's format
+{
+	det_args: {
+		det_model_name: {
+			init_params: {} # use to create a detector
+			det_params: {} # use to run detection
+		}
+	}
+	
+	encoding_args: {
+		encoding_model_name: {
+			init_params: {} # use to create an encoder
+		}
+	}
+}
 ```
 
-## find similar van v05
-```
-python find_similar_van_v05.py
+`det_args` is the settings of the detection models, only support `["yolov5_coco", "yolov5_amazon", "mdef", "grid"]`.
 
-same pipeline as "find similar van v03", but during the inference stage, we replace coco model with opencv world detection model(mvits_for_class_agnostic_od)
-```
+`init_params` is the initial parameters to create a detector, please do not modify them.
+
+`det_params` is the parameters to run detection. If you want to print dets, please change `verbose: false` to  `verbose: true`.
+
+`encoding_args` is the settings of the encoding models, only support `["cvnet", "vit"]`
+
+`init_params` is the initial parameters to create a detector, please do not modify them.
+
+
+
+# Reference
+
+[https://github.com/sungonce/CVNet](https://github.com/sungonce/CVNet)
+
+[https://github.com/mmaaz60/mvits_for_class_agnostic_od](https://github.com/mmaaz60/mvits_for_class_agnostic_od)
+

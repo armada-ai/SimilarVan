@@ -1,0 +1,66 @@
+{
+    "det_args": {
+        "yolov5_coco": {
+            "init_params": {
+                "det_model_name": "yolov5",
+                "ckpt_path": "ckpts/coco_yolov5x.torchscript", 
+                "device": "cuda"
+            },
+            "det_params": {
+                "conf_thresh": 0.25, 
+                "size": 640, 
+                "verbose": false
+            }
+        },
+        "yolov5_amazon": {
+            "init_params": {
+                "det_model_name": "yolov5",
+                "ckpt_path": "ckpts/amazon_van_detect.torchscript",
+                "device": "cuda"
+            },
+            "det_params": {
+                "conf_thresh": 0.25, 
+                "size": 640, 
+                "verbose": false
+            }
+        },
+        "mdef": {
+            "init_params": {
+                "det_model_name": "mdef",
+                "model_name": "mdef_detr_minus_language", 
+                "ckpt_path": "ckpts/MDef_DETR_minus_language_r101_epoch10.pth"
+            },
+            "det_params": {
+                "conf_thresh": 0.25, 
+                "caption": "all objects", 
+                "multi_crop": false,
+                "verbose": false
+            }
+        },
+        "grid": {
+            "init_params": {
+                "det_model_name": "grid"
+            },
+            "det_params": {
+                "n": 4, 
+                "verbose": false
+            }
+        }
+    },
+    
+    "encoding_args": {
+        "cvnet": {
+            "init_params": {
+                "enconding_model_name": "cvnet",
+                "ckpt_path": "ckpts/CVNet_R50.pth", 
+                "depth": 50,
+                "reduction_dim": 2048
+            }
+        },
+        "vit": {
+            "init_params": {
+                "enconding_model_name": "vit"
+            }
+        }
+    }
+}

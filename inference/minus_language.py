@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from PIL import Image
 import torchvision.transforms as T
-from infer import Inference
+from .infer import Inference
 
 torch.set_grad_enabled(False)
 
