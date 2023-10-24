@@ -107,6 +107,12 @@ configs.json's format
 `init_params` is the initial parameters to create a detector, please do not modify them.
 
 
+## run trajectory prediction
+`python infer_tutr.py`
+
+the results will be in `fig/sdd`
+
+
 
 # Reference
 
@@ -114,3 +120,4 @@ configs.json's format
 
 [https://github.com/mmaaz60/mvits_for_class_agnostic_od](https://github.com/mmaaz60/mvits_for_class_agnostic_od)
 
+[https://github.com/lssiair/TUTR](https://github.com/lssiair/TUTR)

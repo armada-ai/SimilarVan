@@ -68,3 +68,4 @@ data/Delivery_Van_/20230710170432.MP4_000103.jpg filter=lfs diff=lfs merge=lfs -
 data/Delivery_Van_/20230710170713.MP4_000013.jpg filter=lfs diff=lfs merge=lfs -text
 data/Girl/ filter=lfs diff=lfs merge=lfs -text
 data/Tiger1/ filter=lfs diff=lfs merge=lfs -text
+ckpts/sdd/best.pth filter=lfs diff=lfs merge=lfs -text
